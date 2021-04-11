@@ -50,7 +50,9 @@ TIMELINE_LINE_DASH = 2
 
 
 class Schedule(ImageContent):
-    """A database-backed schedule determining which images to show at request
+    """User schedule processing.
+
+    A database-backed schedule determining which images to show at request
     time and when to wake up from sleep for the next request.
 
     The schedule is a list of maps, each containing:
@@ -64,6 +66,11 @@ class Schedule(ImageContent):
     """
 
     def __init__(self, geocoder):
+        """Schedule constructor.
+
+        Args:
+            geocoder (geocoder.Geocoder): Used to localize user specified locations
+        """
         self._local_time = LocalTime(geocoder)
         self._sun = Sun(geocoder)
         self._artwork = Artwork()
@@ -73,8 +80,7 @@ class Schedule(ImageContent):
         self._everyone = Everyone(geocoder)
 
     def _next(self, cron, after, user):
-        """Finds the next time matching the cron expression."""
-
+        """Find the next time matching the cron expression."""
         try:
             cron = self._sun.rewrite_cron(cron, after, user)
         except DataError as e:
@@ -85,9 +91,20 @@ class Schedule(ImageContent):
         except ValueError as e:
             raise ContentError(e)
 
-    def _image(self, kind, user, width, height):
-        """Creates an image based on the kind."""
+    def _previous(self, cron, before, user):
+        """Find the previous time matching the cron expression."""
+        try:
+            cron = self._sun.rewrite_cron(cron, before, user)
+        except DataError as e:
+            raise ContentError(e)
 
+        try:
+            return croniter(cron, before).get_prev(datetime)
+        except ValueError as e:
+            raise ContentError(e)
+
+    def _image(self, kind, user, width, height):
+        """Create an image based on the kind."""
         if kind == 'artwork':
             content = self._artwork
         elif kind == 'city':
@@ -105,29 +122,21 @@ class Schedule(ImageContent):
         return content.image(user, width, height)
 
     def image(self, user, width, height):
-        """Generates the current image based on the schedule."""
-
+        """Generate the current image based on the schedule."""
         # Find the current schedule entry by parsing the cron expressions.
         try:
             time = self._local_time.now(user)
         except DataError as e:
             raise ContentError(e)
-        today = time.replace(hour=0, minute=0, second=0, microsecond=0)
-        while True:
-            entries = [(self._next(entry['start'], today, user), entry)
-                       for entry in user.get('schedule')]
-            if not entries:
-                raise ContentError('Empty schedule')
-            past_entries = list(filter(lambda x: x[0] <= time, entries))
 
-            # Use the most recent past entry.
-            if past_entries:
-                latest_datetime, latest_entry = max(past_entries,
-                                                    key=lambda x: x[0])
-                break
+        entries = [(self._previous(entry['start'], time, user), entry)
+                   for entry in user.get('schedule')]
+        if not entries:
+            raise ContentError('Empty schedule')
 
-            # If there were no past entries, try the previous day.
-            today -= timedelta(days=1)
+        # Use the most recent past entry.
+        latest_datetime, latest_entry = max(entries,
+                                            key=lambda x: x[0])
 
         # Generate the image from the current schedule entry.
         info('Using image from schedule entry: %s (%s, %s)' % (
@@ -139,8 +148,7 @@ class Schedule(ImageContent):
         return image
 
     def delay(self, user):
-        """Calculates the delay in milliseconds to the next schedule entry."""
-
+        """Calculate the delay in milliseconds to the next schedule entry."""
         # Find the next schedule entry by parsing the cron expressions.
         try:
             time = self._local_time.now(user)
@@ -165,8 +173,7 @@ class Schedule(ImageContent):
         return milliseconds
 
     def empty_timeline(self):
-        """Generates an empty timeline image."""
-
+        """Generate an empty timeline image."""
         image = Image.new(mode='RGB', size=(TIMELINE_WIDTH, TIMELINE_HEIGHT),
                           color=TIMELINE_BACKGROUND)
         draw = Draw(image)
@@ -199,8 +206,7 @@ class Schedule(ImageContent):
         return image
 
     def timeline(self, user):
-        """Generates a timeline image of the schedule for settings."""
-
+        """Generate a timeline image of the schedule for settings."""
         image = self.empty_timeline()
         draw = Draw(image)
 

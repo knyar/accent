@@ -270,4 +270,7 @@ def server_error(e):
 
 
 if __name__ == '__main__':
+    import logging
+    import sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     app.run(host='127.0.0.1', port=8080, debug=True)
