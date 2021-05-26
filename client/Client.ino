@@ -13,7 +13,7 @@ const uint8_t kWifiResetPin = 23;
 const uint8_t kBatteryLevelPin = 34;
 
 // The base URL for server requests.
-const String kBaseUrl = "https://accent.ink";
+const String kBaseUrl = "https://knyar-accent.ew.r.appspot.com";
 
 // The URL for the next wake time endpoint.
 const String kNextEndpoint = kBaseUrl + "/next";
@@ -33,7 +33,7 @@ Network network(kSerialSpeed);
 Power power;
 
 void setup() {
-  Serial.begin(kSerialSpeed);
+//  Serial.begin(kSerialSpeed);
 
   // Check if the Wifi reset pin has been connected to GND.
   pinMode(kWifiResetPin, INPUT_PULLUP);
