@@ -5,6 +5,7 @@ from flask import request
 from googleapiclient.http import build_http
 from logging import error
 from logging import exception
+from logging.config import dictConfig
 from oauth2client.client import HttpAccessTokenRefreshError
 from time import time
 
@@ -60,6 +61,9 @@ schedule = Schedule(geocoder)
 
 # The Flask app handling requests.
 app = Flask(__name__)
+
+# Set INFO as the default logging level.
+dictConfig({'version': 1, 'root': {'level': 'INFO'}})
 
 
 @app.route('/artwork')
