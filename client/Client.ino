@@ -9,6 +9,9 @@ const uint32_t kSerialSpeed = 115200;
 // The GPIO pin used to reset Wifi settings.
 const uint8_t kWifiResetPin = 23;
 
+// The GPIO pin used to measure battery voltage.
+const uint8_t kBatteryLevelPin = 34;
+
 // The base URL for server requests.
 const String kBaseUrl = "https://accent.ink";
 
@@ -71,12 +74,16 @@ void loop() {
 
 // Streams the image from the server and sends it to the display in chunks.
 bool downloadImage() {
+  int batteryLevel = analogRead(kBatteryLevelPin);
+  Serial.printf("Battery level: %d\n", batteryLevel);
+  
   Serial.println("Downloading image");
   HTTPClient http;
 
   // Request the current image from the server.
   if (!network.HttpGet(&http, kEpdEndpoint,
-                       {"width", String(display.Width()),
+                       {"battery", String(batteryLevel),
+                        "width", String(display.Width()),
                         "height", String(display.Height())})) {
     return false;
   }
