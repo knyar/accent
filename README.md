@@ -13,7 +13,7 @@ To push the client code to the board:
    - [Board Manager](https://www.arduino.cc/en/guide/cores) URL: `https://dl.espressif.com/dl/package_esp32_index.json`
    - Board: `ESP32 Dev Module`
 2. [Install](https://www.arduino.cc/en/guide/libraries) the required libraries.
-   - [GxEPD](https://github.com/ZinggJM/GxEPD2) (1.3.0)
+   - [GxEPD2](https://github.com/ZinggJM/GxEPD2) (1.3.8)
    - [GFX_Root](https://github.com/ZinggJM/GFX_Root) (2.0.0)
 3. Pick one display type in [`Display.h`](client/Display.h).
    - [GDEW075Z09](https://www.e-paper-display.com/products_detail/productId=324.html)  (7.5" 640x384)

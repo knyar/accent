@@ -6,9 +6,6 @@
 // The baud rate for the serial connection.
 const uint32_t kSerialSpeed = 115200;
 
-// The GPIO pin used to reset Wifi settings.
-const uint8_t kWifiResetPin = 23;
-
 // The GPIO pin used to measure battery voltage.
 const uint8_t kBatteryLevelPin = 34;
 
@@ -33,15 +30,6 @@ Network network(kSerialSpeed);
 Power power;
 
 void setup() {
-//  Serial.begin(kSerialSpeed);
-
-  // Check if the Wifi reset pin has been connected to GND.
-  pinMode(kWifiResetPin, INPUT_PULLUP);
-  delay(1);  // Wait for pull-up to become active.
-  if (digitalRead(kWifiResetPin) == LOW) {
-    network.ResetWifi();
-  }
-
   // Connect to Wifi or start the setup flow.
   if (!network.ConnectWifi()) {
     display.ShowWifiSetup();

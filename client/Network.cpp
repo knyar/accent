@@ -35,10 +35,17 @@ const uint32_t kConnectTimeoutMs = 30 * 1000;
 // The time in milliseconds between each connection check.
 const uint32_t kConnectTimeoutStepMs = 500;
 
+// The time in milliseconds after which to begin monitoring wifi reset button.
+const uint16_t kWifiResetDelayMs = 2 * 1000;
+
 // The time in milliseconds before timing out when reading HTTP data.
 const uint16_t kReadTimeoutMs = 30 * 1000;
 
+// The GPIO pin used to reset Wifi settings.
+const uint8_t kWifiResetPin = 0;
+
 bool Network::ConnectWifi() {
+  Serial.println("Looking for Wifi credentials");
   if (WiFi.isConnected()) {
     Serial.println("Already connected");
     return true;
@@ -71,6 +78,11 @@ bool Network::ConnectWifi() {
       display_.ShowError();
       // Restart rather than return false to reset the Wifi connection.
       power_.Restart();
+    }
+    if (i > kWifiResetDelayMs / kConnectTimeoutStepMs) {
+      // If wifi network cannot get connected to for a few seconds,
+      // check for the wifi reset button.
+      Network::MaybeResetWifi();
     }
     delay(kConnectTimeoutStepMs);
     Serial.print(".");
@@ -130,14 +142,20 @@ bool Network::HttpGet(HTTPClient* http, const String& base_url,
   return true;
 }
 
-void Network::ResetWifi() {
-  Serial.println("Resetting Wifi credentials");
+void Network::MaybeResetWifi() {
+  Serial.println("Checking for wifi reset button");
 
-  Preferences preferences;
-  preferences.begin(kWifiPreferences, false);
-  preferences.putString(kWifiSsidKey, "");
-  preferences.putString(kWifiPasswordKey, "");
-  preferences.end();
+  pinMode(kWifiResetPin, INPUT_PULLUP);
+  delay(1);  // Wait for pull-up to become active.
+  if (digitalRead(kWifiResetPin) == LOW) {
+    Serial.println("Resetting Wifi credentials");
+
+    Preferences preferences;
+    preferences.begin(kWifiPreferences, false);
+    preferences.putString(kWifiSsidKey, "");
+    preferences.putString(kWifiPasswordKey, "");
+    preferences.end();
+  }
 }
 
 bool Network::StartWifiSetupServer() {

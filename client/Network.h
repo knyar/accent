@@ -29,8 +29,8 @@ class Network {
   bool HttpGet(HTTPClient* http, const String& base_url,
                const std::vector<String>& parameters);
 
-  // Deletes any saved Wifi SSID and password.
-  void ResetWifi();
+  // Deletes any saved Wifi SSID and password if a button is pressed.
+  void MaybeResetWifi();
 
   // Opens an access point and starts a web server for Wifi setup.
   bool StartWifiSetupServer();

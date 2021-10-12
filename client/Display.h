@@ -12,12 +12,12 @@
 // #define PAGE_HEIGHT GxEPD2_750c::HEIGHT
 
 // Display type GDEW075Z08 (7.5" 800x480)
-// #define DISPLAY_TYPE GxEPD2_750c_Z08
-// #define PAGE_HEIGHT GxEPD2_750c_Z08::HEIGHT
+#define DISPLAY_TYPE GxEPD2_750c_Z08
+#define PAGE_HEIGHT GxEPD2_750c_Z08::HEIGHT
 
 // Display type GDEH075Z90 (7.5" 880x528)
-#define DISPLAY_TYPE GxEPD2_750c_Z90
-#define PAGE_HEIGHT (GxEPD2_750c_Z90::HEIGHT / 2)
+// #define DISPLAY_TYPE GxEPD2_750c_Z90
+// #define PAGE_HEIGHT (GxEPD2_750c_Z90::HEIGHT / 2)
 
 // A high-level wrapper around the e-paper display.
 class Display {
