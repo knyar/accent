@@ -40,12 +40,20 @@ To populate the cross-user data after [setting up](https://firebase.google.com/d
 2. Obtain an API key for [OpenWeather](https://openweathermap.org/guide) and add it in the `api_keys` collection under `/api_keys/open_weather/api_key`.
 3. Obtain an [OAuth client ID](https://console.developers.google.com/apis/credentials) for the [Google Calendar API](https://developers.google.com/calendar/quickstart/python) with scope `https://www.googleapis.com/auth/calendar.readonly` in the OAuth consent screen. You will either need to make your OAuth app public or add your account to the list of test users. Configure the full `/oauth` URL of your App Engine app as an authorized redirect URI for the OAuth client. Write OAuth Client ID and Client Secret to the `client_id` and `client_secret` fields of the `google_calendar` document in the `oauth_client` Firestore collection (`/oauth_clients/google_calendar`).
 
-To test and deploy the server:
-1. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/), [create a project](https://cloud.google.com/resource-manager/docs/creating-managing-projects), and [authenticate with a service account](https://cloud.google.com/docs/authentication/getting-started).
-2. Run `cd server && python3 -m venv venv && . venv/bin/activate`.
-3. Run `pip install -r requirements.txt`.
-4. Run the server locally with `export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project) && python main.py`.
-5. Test the local server with:
+### Running locally
+
+#### Running the Firebase emulator
+
+1. Install the [Firebase emulator](https://firebase.google.com/docs/emulator-suite).
+2. Start Firestore emulator: `cd server && firebase emulators:start --only firestore --project foo`
+3. After the first emulator run, populate cross-user data (described above) in the emulator UI (http://localhost:4000/firestore).
+
+#### Running the server
+
+1. Add virtualenv: `cd server && python3 -m venv venv && . venv/bin/activate`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Start the server locally with `GOOGLE_CLOUD_PROJECT=foo FIRESTORE_EMULATOR_HOST="localhost:18080" ./venv/bin/python main.py`
+4. Test the local server with:
    - [/hello/<USER_KEY>](http://localhost:8080/hello/<USER_KEY>) for the settings UI to edit user-specific data.
    - [/next?key=<USER_KEY>](http://localhost:8080/next?key=<USER_KEY>) for the time in milliseconds until the next schedule entry.
    - [/epd?key=<USER_KEY>](http://localhost:8080/epd?key=<USER_KEY>) for the currently scheduled 2-bit image used by the e-paper display.
@@ -55,7 +63,11 @@ To test and deploy the server:
    - [/commute?key=<USER_KEY>](http://localhost:8080/commute?key=<USER_KEY>) to bypass the schedule and get the commute image directly.
    - [/calendar?key=<USER_KEY>](http://localhost:8080/calendar?key=<USER_KEY>) to bypass the schedule and get the calendar image directly.
    - [/everyone?key=<USER_KEY>](http://localhost:8080/everyone?key=<USER_KEY>) to bypass the schedule and get the everyone image directly.
-6. Deploy the server with `gcloud app deploy`.
+
+### Deploying the server
+
+1. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/), [create a project](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
+2. Deploy the server with `gcloud app deploy`.
 
 ## Frame
 
