@@ -24,9 +24,17 @@ SCREENSTAR_SMALL_REGULAR = {
     }
 }
 
+def char_width(draw, font, character, overrides):
+    """Returns the width of a given character."""
+    # Override the measured width, if specified.
+    if character in overrides.keys():
+        return overrides[character]
+    width, _ = draw.textsize(character, font)
+    return width
 
 def draw_text(text, font_spec, text_color, xy=None, anchor=None,
               box_color=None, box_padding=0, border_color=None, border_width=0,
+              max_width=None,
               image=None, draw=None):
     """Draws centered text on an image, optionally in a box."""
 
@@ -35,20 +43,31 @@ def draw_text(text, font_spec, text_color, xy=None, anchor=None,
     text_size = font_spec['size']
     font = ImageFont.truetype(font_spec['file'], size=text_size)
 
-    # Measure the width of each character.
-    character_widths = []
-    for character in text:
-        # Override the measured width, if specified.
-        width_overrides = font_spec['width_overrides']
-        if character in width_overrides.keys():
-            character_width = width_overrides[character]
-        else:
-            character_width, _ = draw.textsize(character, font)
-        character_widths.append(character_width)
-    text_width = sum(character_widths)
+    width_overrides = font_spec['width_overrides']
+    textlines = [""]  # text split per line
+    character_widths = [[]]  # character widths per line
+    for word in text.split():
+        # Measure the width of each character.
+        widths = [char_width(draw, font, c, width_overrides) for c in word]
+
+        # If appending a word to the given line would exceed max_width,
+        # add a new line.
+        if max_width and sum(widths) + sum(character_widths[-1]) > max_width:
+            character_widths.append([])
+            textlines.append("")
+        # If current line has some content, add a space before this word.
+        elif textlines[-1]:
+            character_widths[-1].append(
+                char_width(draw, font, ' ', width_overrides))
+            textlines[-1] += ' '
+        character_widths[-1].extend(widths)
+        textlines[-1] += word
+
+    # Width of the longest line is the text width.
+    text_width = max([sum(w) for w in character_widths])
 
     # If any xy is specified, use it.
-    text_height = font_spec['height']
+    text_height = font_spec['height'] * len(textlines)
     if xy:
         x = xy[0] - text_width // 2
         y = xy[1] - text_height // 2
@@ -79,12 +98,18 @@ def draw_text(text, font_spec, text_color, xy=None, anchor=None,
     if box_color:
         draw.rectangle(box_xy, box_color)
 
-    # Draw the text character by character.
-    y -= font_spec['y_offset']
-    for index in range(len(text)):
-        character = text[index]
-        draw.text((x, y), character, text_color, font)
-        x += character_widths[index]
+    # Draw the text line by line.
+    orig_x = x
+    for i in range(len(textlines)):
+        y -= font_spec['y_offset']
+        textline = textlines[i]
+        # Draw the line character by character.
+        for index in range(len(textline)):
+            character = textline[index]
+            draw.text((x, y), character, text_color, font)
+            x += character_widths[i][index]
+        y += font_spec['height']
+        x = orig_x
 
     # Return the bounding box for layout calculations.
     return border_xy
